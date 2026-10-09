@@ -1,6 +1,16 @@
 'use strict';
 // Stable sorting preserves separate source records, including repeated nicknames.
 window.KunkunTables = {
+  deletePlayer(data, index) {
+    const nickname=this.nicknameKey(data.players[index].nickname);
+    data.players.splice(index,1);
+    if(nickname&&!data.players.some(p=>this.nicknameKey(p.nickname)===nickname)){
+      for(const row of [...data.characters,...(data.bloodbags||[])]){
+        if(this.nicknameKey(row.owner)===nickname)row.owner='';
+      }
+    }
+    this.syncNamings(data.players,data.characters);
+  },
   bloodLevel(record) {
     const values=['attack','defense','health'].map(field=>record[field]);
     return values.reduce((sum,v)=>sum+Math.round(Number(v)*100),0)/100;
