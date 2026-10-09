@@ -3,7 +3,6 @@
 window.KunkunTables = {
   bloodLevel(record) {
     const values=['attack','defense','health'].map(field=>record[field]);
-    if(values.some(v=>v===null||v===undefined||v===''))return null;
     return values.reduce((sum,v)=>sum+Math.round(Number(v)*100),0)/100;
   },
   findPlayers(players, query) {
