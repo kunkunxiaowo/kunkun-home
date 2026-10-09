@@ -5,7 +5,7 @@ window.KunkunTables = {
     const nickname=this.nicknameKey(data.players[index].nickname);
     data.players.splice(index,1);
     if(nickname&&!data.players.some(p=>this.nicknameKey(p.nickname)===nickname)){
-      for(const row of [...data.characters,...(data.bloodbags||[])]){
+      for(const row of data.characters){
         if(this.nicknameKey(row.owner)===nickname)row.owner='';
       }
     }
