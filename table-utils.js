@@ -1,6 +1,17 @@
 'use strict';
 // Stable sorting preserves separate source records, including repeated nicknames.
 window.KunkunTables = {
+  findPlayers(players, query) {
+    const key=this.nicknameKey(query).toLocaleLowerCase();
+    if(!key)return [];
+    const exact=players.filter(p=>this.nicknameKey(p.nickname).toLocaleLowerCase()===key);
+    return exact.length?exact:players.filter(p=>this.nicknameKey(p.nickname).toLocaleLowerCase().includes(key));
+  },
+  excludeBloodCharacters(characters,bloodbags) {
+    const base=value=>this.nicknameKey(value).toLocaleLowerCase().split(/[\\/]/).pop().replace(/\.def$/,'').replace(/\d+p$/,'');
+    const names=new Set(bloodbags.map(b=>base(b.name)));
+    return characters.filter(c=>!names.has(base(c.name)));
+  },
   nicknameKey(value) { return value.trim().normalize('NFKC'); },
   mergePlayers(players) {
     const groups = new Map();
