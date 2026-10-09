@@ -40,9 +40,13 @@ window.KunkunTables = {
     };
     return Array.from(groups.values(), rows => ({...rows[0], fragments:sum(rows,'fragments'),tickets:sum(rows,'tickets'),namings:[...new Set(rows.flatMap(p=>p.namings||[]))],label:[...new Set(rows.map(p=>p.label).filter(Boolean))].join('；'),note:[...new Set(rows.map(p=>p.note).filter(Boolean))].join('\n')}));
   },
-  syncNamings(players, characters) {
+  syncNamings(players, characters, addMissing=false) {
     const owners=new Map();
     for(const c of characters){const key=this.nicknameKey(c.owner);if(!key)continue;if(!owners.has(key))owners.set(key,new Set());owners.get(key).add(c.name);}
+    if(addMissing){
+      const existing=new Set(players.map(p=>this.nicknameKey(p.nickname)));
+      for(const nickname of owners.keys())if(!existing.has(nickname))players.push({key:crypto.randomUUID(),nickname,fragments:0,tickets:null,namings:[],label:'',note:''});
+    }
     for(const p of players)p.namings=[...(owners.get(this.nicknameKey(p.nickname))||[])];
   },
   sortRecords(records, field, direction = 'desc') {
