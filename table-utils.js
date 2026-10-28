@@ -38,7 +38,10 @@ window.KunkunTables = {
       const values = rows.map(p=>p[field]).filter(v=>v!==null&&v!==undefined&&v!=='');
       return values.length ? values.reduce((total,v)=>total+Math.round(Number(v)*100),0)/100 : null;
     };
-    return Array.from(groups.values(), rows => ({...rows[0],...(rows.find(p=>p.douyinId)||{}), fragments:sum(rows,'fragments')===null?null:Math.round(sum(rows,'fragments')),tickets:sum(rows,'tickets'),namings:[...new Set(rows.flatMap(p=>p.namings||[]))],label:[...new Set(rows.map(p=>p.label).filter(Boolean))].join('；'),note:[...new Set(rows.map(p=>p.note).filter(Boolean))].join('\n')}));
+    return Array.from(groups.values(), rows => {
+      if(new Set(rows.map(p=>p.douyinId).filter(Boolean)).size>1)return rows;
+      return {...rows[0],...(rows.find(p=>p.douyinId)||{}), fragments:sum(rows,'fragments')===null?null:Math.round(sum(rows,'fragments')),tickets:sum(rows,'tickets'),namings:[...new Set(rows.flatMap(p=>p.namings||[]))],label:[...new Set(rows.map(p=>p.label).filter(Boolean))].join('；'),note:[...new Set(rows.map(p=>p.note).filter(Boolean))].join('\n')};
+    }).flat();
   },
   syncNamings(players, characters, addMissing=false) {
     const owners=new Map();
