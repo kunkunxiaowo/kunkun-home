@@ -48,7 +48,7 @@ window.KunkunTables = {
     for(const c of characters){const key=this.nicknameKey(c.owner);if(!key)continue;if(!owners.has(key))owners.set(key,new Set());owners.get(key).add(c.name);}
     if(addMissing){
       const existing=new Set(players.map(p=>this.nicknameKey(p.nickname)));
-      for(const nickname of owners.keys())if(!existing.has(nickname))players.push({key:crypto.randomUUID(),nickname,fragments:0,tickets:null,namings:[],label:'',note:''});
+      for(const nickname of owners.keys())if(!existing.has(nickname))players.push({key:crypto.randomUUID(),nickname,fragments:0,namings:[],label:'',note:''});
     }
     for(const p of players)p.namings=[...(owners.get(this.nicknameKey(p.nickname))||[])];
   },
