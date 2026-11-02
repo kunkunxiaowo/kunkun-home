@@ -22,7 +22,7 @@ async function loadScores(force=false){
     if(!res.ok)throw Error('积分资料暂未就绪');
     const value=await res.json();
     if(!Array.isArray(value.rows))throw Error('积分资料格式有误');
-    scoreRows=value.rows;
+    scoreRows=value.rows.slice().sort(function(x,y){var bx=Number(x[2]||0)||0,by=Number(y[2]||0)||0;if(by!==bx)return by-bx;return String(x[1]||x[0]).localeCompare(String(y[1]||y[0]),"zh-CN");});
     scoreMap=new Map(scoreRows.map(r=>[String(r[0]),r]));
     scoreLoaded=true;
   })();
