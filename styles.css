@@ -3,3 +3,5 @@
 .hero{padding:20px 8px 26px}.hero p{font-size:14px}.coming-soon{text-align:center;padding:65px 20px}.coming-soon h2{font-size:30px}.view-tabs{display:grid;grid-template-columns:repeat(4,1fr)}.view-tabs button{padding:13px 12px}.view-tabs button[aria-selected="true"]{box-shadow:0 3px 10px #32695822}@media(max-width:650px){.view-tabs{grid-template-columns:repeat(2,1fr);gap:8px}.coming-soon{padding:45px 10px}}
 /* 手机端血包表格：压缩列宽，六列一屏内可见 */
 @media(max-width:650px){.blood-table{min-width:0;font-size:12px}.blood-table th,.blood-table td{padding:9px 4px}.blood-table th{font-size:11px;line-height:1.25}.blood-table td:not(:first-child){white-space:normal}.blood-table th:nth-child(n+3),.blood-table td:nth-child(n+3){text-align:right}.blood-table td:first-child{max-width:96px}.table-scroll{-webkit-overflow-scrolling:touch}.balance-grid{grid-template-columns:repeat(2,1fr);gap:8px}.balance strong{font-size:16px;word-break:break-all}}
+/* 手机端弹幕积分表格 */
+@media(max-width:650px){#custom-panel table{min-width:0}#custom-panel th,#custom-panel td{padding:9px 6px;white-space:normal}#custom-panel td:last-child{font-weight:600}}

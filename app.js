@@ -4,32 +4,61 @@ let data = window.KUNKUN_DATA;
 const $ = (id) => document.getElementById(id);
 function el(tag, text, cls) { const n = document.createElement(tag); if(text !== undefined)n.textContent=text;if(cls)n.className=cls;return n; }
 const number = (n) => n === null || n === undefined || n === '' ? '未录入' : Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
-// 弹幕积分：按抖音号从小窝同步的积分快照里查（首次查询时才下载，之后内存缓存）。
-let __scoreMap = null, __scoreTask = null;
-function loadScores() {
-  if (__scoreMap) return Promise.resolve(__scoreMap);
-  if (__scoreTask) return __scoreTask;
-  __scoreTask = fetch('score-data.json')
-    .then(function (r) { return r.ok ? r.json() : { rows: [] }; })
-    .then(function (d) {
-      __scoreMap = new Map();
-      for (const row of (d && d.rows) || []) {
-        if (row && row[0] !== undefined && row[0] !== null) __scoreMap.set(String(row[0]), Number(row[2]) || 0);
-      }
-      return __scoreMap;
-    })
-    .catch(function () { __scoreMap = new Map(); return __scoreMap; });
-  return __scoreTask;
+// 弹幕积分：从小窝同步的积分快照读取，按抖音号精确匹配。
+// 单位：>=1WE(万亿) 用 WE；>=1E(亿) 用 E；>=1W(万) 用 W；否则原数。
+let scoreRows=[],scoreMap=new Map(),scoreLoaded=false,scorePage=1,scorePromise=null;
+function pointsText(value){
+  let n=Number(value||0);
+  if(n>=1e12)return (n/1e12>=100?Math.trunc(n/1e12):(n/1e12).toFixed(2).replace(/\.?0+$/,''))+'WE';
+  if(n>=1e8)return Math.trunc(n/1e8)+'E';
+  if(n>=1e4)return Math.trunc(n/1e4)+'W';
+  return Math.trunc(n).toLocaleString('zh-CN');
 }
-function fillScore(p, target) {
-  const uid = String(p.douyinId || '').trim();
-  if (!uid) { target.textContent = '未绑定'; return; }
-  target.textContent = '查询中…';
-  loadScores().then(function (map) {
-    const v = map.get(uid);
-    target.textContent = v === undefined ? '未录入' : Number(v).toLocaleString('zh-CN');
-  }).catch(function () { target.textContent = '读取失败'; });
+async function loadScores(force=false){
+  if(scoreLoaded&&!force)return;
+  if(scorePromise)return scorePromise;
+  scorePromise=(async()=>{
+    const res=await fetch('score-data.json'+(force?'?v='+Date.now():''),{cache:'no-cache'});
+    if(!res.ok)throw Error('积分资料暂未就绪');
+    const value=await res.json();
+    if(!Array.isArray(value.rows))throw Error('积分资料格式有误');
+    scoreRows=value.rows;
+    scoreMap=new Map(scoreRows.map(r=>[String(r[0]),r]));
+    scoreLoaded=true;
+  })();
+  try{await scorePromise;}finally{scorePromise=null;}
 }
+function fillScore(p,target){
+  const uid=String(p.douyinId||'').trim();
+  if(!uid){target.textContent='未绑定';return;}
+  target.textContent='查询中…';
+  loadScores().then(function(){
+    const row=scoreMap.get(uid);
+    target.textContent=row?pointsText(row[2]):'未录入';
+  }).catch(function(){target.textContent='读取失败';});
+}
+function renderScores(){
+  const q=$('score-search').value.trim().toLocaleLowerCase();
+  const rows=scoreRows.map((r,i)=>({r,i})).filter(({r})=>!q||(String(r[0])+' '+r[1]).toLocaleLowerCase().includes(q));
+  const pages=Math.max(1,Math.ceil(rows.length/20));
+  scorePage=Math.min(scorePage,pages);
+  $('score-rows').replaceChildren();
+  for(const {r,i} of rows.slice((scorePage-1)*20,scorePage*20)){
+    const tr=el('tr');
+    tr.append(el('td',r[0]===undefined?'—':String(i+1)),el('td',r[1]||r[0]),el('td',pointsText(r[2])));
+    $('score-rows').append(tr);
+  }
+  if(!rows.length){const tr=el('tr');const td=el('td','没有符合条件的玩家');td.colSpan=3;tr.append(td);$('score-rows').append(tr);}
+  $('score-count').textContent='共 '+rows.length+' 位玩家';
+  $('score-page').textContent=scorePage+' / '+pages;
+  $('score-prev').disabled=scorePage===1;
+  $('score-next').disabled=scorePage===pages;
+}
+$('custom-tab').addEventListener('click',async()=>{try{await loadScores();renderScores();}catch(e){$('score-count').textContent=e.message;}});
+$('score-search').addEventListener('input',()=>{scorePage=1;renderScores();});
+$('score-prev').addEventListener('click',()=>{scorePage--;renderScores();});
+$('score-next').addEventListener('click',()=>{scorePage++;renderScores();});
+$('score-refresh').addEventListener('click',async()=>{try{await loadScores(true);renderScores();}catch(e){$('score-count').textContent=e.message;}});
 function findPlayers(players,query){return window.KunkunTables.findPlayers(players,query);}
 window.KunkunQuery={findPlayers};
 if(!data){$('results').replaceChildren(el('p','数据加载失败，请刷新页面。','warning'));throw Error('Missing public data');}
